@@ -1,0 +1,15 @@
+Machine learning para diagnóstico de transtornos do neurodesenvolvimento
+
+Desenho do estudo
+ABIDE (TEA), ADHD-200 (TDAH) e CIFASD (TEAF)
+Classes: TEA, TDAH, TEAF e controle
+Árvore de decisão vs. Random Forest/XGBoost
+
+Como será avaliado
+Acurácia balanceada e sensibilidade por classe
+Holdout estratificado por sítio de coleta
+Meta: superar a árvore nos casos confundíveis
+
+Para discutir
+Incluir dados moleculares ou só os comportamentais, cognitivos e de imagem, mais usados no diagnóstico?
+Viés de sítio e classes desbalanceadas

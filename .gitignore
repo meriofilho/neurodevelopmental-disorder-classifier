@@ -1,0 +1,30 @@
+# Dados (grandes e com termos de uso)
+data/raw/**
+data/interim/**
+data/processed/**
+!data/**/.gitkeep
+!data/README.md
+
+# Slides das aulas (material de terceiros, ~29 MB)
+docs/aulas/
+
+# Modelos gerados
+results/models/**
+!results/models/.gitkeep
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+
+# R
+.Rhistory
+.RData
+.Rproj.user/
+
+# Office / SO
+~$*
+Thumbs.db
+desktop.ini
