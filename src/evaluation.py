@@ -5,7 +5,7 @@ from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import IterativeImputer
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.metrics import balanced_accuracy_score, confusion_matrix, recall_score, roc_auc_score
 from sklearn.model_selection import GroupKFold, cross_val_predict
 from sklearn.pipeline import make_pipeline
@@ -79,7 +79,43 @@ def make_models(seed: int = RANDOM_STATE, tree_depth: int = 3) -> dict:
     }
 
 
+def make_models_conn(seed: int = RANDOM_STATE, tree_depth: int = 3) -> dict:
+    """Modelos para conectividade (milhares de features, sem valores ausentes).
+
+    Regressão logística L2 com C escolhido por validação interna (3 dobras, só no treino de cada dobra externa).
+    LDA fica de fora: com 6441 features, o shrinkage leva ~2 min por ajuste.
+    RF e XGBoost usam threads (n_jobs=-1); o que quebra no Windows é o multiprocessamento do joblib.
+    """
+    return {
+        "Regressão logística": make_pipeline(
+            StandardScaler(),
+            LogisticRegressionCV(Cs=[1e-4, 1e-3, 1e-2, 1e-1], cv=3, class_weight="balanced",
+                                 scoring="balanced_accuracy", max_iter=2000, random_state=seed),
+        ),
+        "Árvore de decisão": DecisionTreeClassifier(max_depth=tree_depth, min_samples_leaf=10,
+                                                    class_weight="balanced", random_state=seed),
+        "Random Forest": RandomForestClassifier(n_estimators=500, min_samples_leaf=5, max_features="sqrt",
+                                                class_weight="balanced", random_state=seed, n_jobs=-1),
+        "XGBoost": BalancedXGB(n_estimators=300, max_depth=3, learning_rate=0.05, subsample=0.8,
+                               colsample_bytree=0.1, max_bin=64, tree_method="hist",
+                               random_state=seed, n_jobs=-1),
+    }
+
+
+def metrics_binary(y: np.ndarray, proba: np.ndarray, nomes=("negativo", "positivo")) -> dict:
+    """Métricas para tarefas binárias (classe 1 = positivo)."""
+    pred = proba.argmax(axis=1)
+    rec = recall_score(y, pred, labels=[0, 1], average=None)
+    return {
+        "acc_balanceada": balanced_accuracy_score(y, pred),
+        f"sens_{nomes[1]}": rec[1], f"espec_{nomes[0]}": rec[0],
+        "auc": roc_auc_score(y, proba[:, 1]),
+    }
+
+
 def metrics(y: np.ndarray, proba: np.ndarray) -> dict:
+    if proba.shape[1] == 2:
+        return metrics_binary(y, proba)
     pred = proba.argmax(axis=1)
     rec = recall_score(y, pred, labels=[0, 1, 2], average=None)
     tea_tdah = np.isin(y, [1, 2])
@@ -93,7 +129,7 @@ def metrics(y: np.ndarray, proba: np.ndarray) -> dict:
     }
 
 
-def repeated_group_cv(model, X, y, groups, seeds=range(10), n_splits=5):
+def repeated_group_cv(model, X, y, groups, seeds=range(10), n_splits=5, metric_fn=None):
     """Repete GroupKFold embaralhado (grupos = sítio) com várias sementes.
 
     Não usa StratifiedGroupKFold: com ~23 sítios ele gera a MESMA divisão para qualquer semente.
@@ -104,7 +140,7 @@ def repeated_group_cv(model, X, y, groups, seeds=range(10), n_splits=5):
     for s in seeds:
         cv = GroupKFold(n_splits=n_splits, shuffle=True, random_state=s)
         proba = cross_val_predict(model, X, y, groups=groups, cv=cv, method="predict_proba")
-        linhas.append({"semente": s, **metrics(y, proba)})
+        linhas.append({"semente": s, **(metric_fn or metrics)(y, proba)})
         if primeira is None:
             primeira = proba
     return pd.DataFrame(linhas), primeira
