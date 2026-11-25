@@ -3,6 +3,8 @@
 Projeto da disciplina **BIF0051 – Aprendizado de Máquina para Bioinformática** (PPgBioinfo / IMD / UFRN, Prof. Patrick Terrematte).
 Apresentação: **01–04/12/2026**.
 
+**Relatório online:** https://meriofilho.github.io/neurodevelopmental-disorder-classifier/ (gerado a partir de `site/` e `results/figures` pelo workflow `.github/workflows/pages.yml`).
+
 ## Pergunta
 Um comitê de classificadores (Random Forest / XGBoost) supera uma árvore de decisão interpretável em diferenciar
 **TEA, TDAH e controles**, especialmente nos casos confundíveis TEA–TDAH? TEAF (via CIFASD) fica como extensão futura.

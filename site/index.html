@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Classificação de transtornos do neurodesenvolvimento (TEA × TDAH) com machine learning</title>
+<meta name="description" content="Relatório do projeto de classificação de TEA, TDAH e controles com dados públicos ABIDE e ADHD-200: viés de base, pareamento, fenótipo, conectividade funcional e fusão.">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="capa">
+  <div class="largura">
+    <p class="sobretitulo">BIF0051 · Aprendizado de Máquina para Bioinformática · PPgBioinfo / IMD / UFRN · 2026</p>
+    <h1>Classificação diferencial de transtornos do neurodesenvolvimento com machine learning</h1>
+    <p class="subtitulo">TEA, TDAH e controles a partir de fenótipo e conectividade funcional em dados públicos
+      (ABIDE I, ABIDE II e ADHD-200). Roteiro para TEAF via CIFASD.</p>
+    <p class="meta">Relatório das análises realizadas · atualizado em novembro de 2026</p>
+  </div>
+</header>
+
+<nav class="sumario largura" aria-label="Sumário">
+  <strong>Sumário</strong>
+  <ol>
+    <li><a href="#resumo">Resumo</a></li>
+    <li><a href="#pergunta">Pergunta e desenho</a></li>
+    <li><a href="#dados">Dados</a></li>
+    <li><a href="#vies">Viés de base e pareamento</a></li>
+    <li><a href="#fenotipo">Modelos com fenótipo</a></li>
+    <li><a href="#conectividade">Conectividade funcional</a></li>
+    <li><a href="#sitio">Efeito de sítio</a></li>
+    <li><a href="#fusao">Fenótipo + conectividade</a></li>
+    <li><a href="#conclusoes">Conclusões</a></li>
+    <li><a href="#limitacoes">Limitações e próximos passos</a></li>
+    <li><a href="#reproducao">Reprodutibilidade</a></li>
+  </ol>
+</nav>
+
+<main class="largura">
+
+<section id="resumo">
+  <h2>1. Resumo</h2>
+  <p>Treinamos e comparamos classificadores (regressão logística, LDA, árvore de decisão, Random Forest e XGBoost) para
+    diferenciar <strong>transtorno do espectro autista (TEA)</strong>, <strong>transtorno de déficit de atenção e
+    hiperatividade (TDAH)</strong> e controles com desenvolvimento típico, usando dados públicos de três bases
+    multicêntricas. Toda a validação deixa instituições inteiras fora do treino.</p>
+
+  <div class="destaques">
+    <div class="destaque">
+      <span class="numero">0,66</span>
+      <span class="rotulo">acurácia balanceada em <b>TEA × Controle</b> (AUC 0,71), fusão de fenótipo e conectividade com regressão logística</span>
+    </div>
+    <div class="destaque">
+      <span class="numero">0,999</span>
+      <span class="rotulo">acurácia para identificar a <b>base de origem</b> só pela conectividade, entre controles: o pipeline de processamento domina o sinal</span>
+    </div>
+    <div class="destaque">
+      <span class="numero">~0,50</span>
+      <span class="rotulo">acurácia em <b>TDAH × Controle</b> com conectividade: sem sinal entre instituições; o QI sozinho chega a 0,57</span>
+    </div>
+  </div>
+
+  <p><strong>Mensagens principais.</strong></p>
+  <ul>
+    <li>Nos dados públicos, <strong>a base de dados coincide com o diagnóstico</strong>: todo TEA vem do ABIDE e todo TDAH
+      do ADHD-200, processados por pipelines diferentes. A conectividade identifica o pipeline com acerto quase perfeito,
+      então <strong>não é possível comparar TEA × TDAH diretamente</strong> com esses dados.</li>
+    <li>Dentro de uma mesma base, <strong>TEA é distinguível de controles</strong> (0,64–0,66), em linha com a literatura do
+      ABIDE com validação entre sítios. <strong>TDAH não é</strong> pela conectividade.</li>
+    <li>Sobre a hipótese do projeto: <strong>os comitês (Random Forest, XGBoost) superam a árvore de decisão</strong> quando
+      há sinal (+0,03 a +0,09), mas <strong>não superam a regressão logística regularizada</strong>.</li>
+    <li>O caminho para a pergunta principal é uma base com os dois diagnósticos no mesmo protocolo: o
+      <strong>Healthy Brain Network (HBN)</strong>, cujo acesso ao fenótipo clínico foi solicitado.</li>
+  </ul>
+</section>
+
+<section id="pergunta">
+  <h2>2. Pergunta e desenho</h2>
+  <p>Os transtornos do neurodesenvolvimento têm sintomas sobrepostos, o que dificulta o diagnóstico diferencial.
+    A proposta do projeto (canvas de IA da disciplina) é um modelo de apoio à triagem, não um substituto do diagnóstico
+    clínico.</p>
+  <table>
+    <thead><tr><th>Item</th><th>Decisão</th></tr></thead>
+    <tbody>
+      <tr><td>Tarefa</td><td>Classificação TEA × TDAH × Controle; TEAF (CIFASD) como extensão futura</td></tr>
+      <tr><td>Hipótese</td><td>Um comitê de classificadores (Random Forest / XGBoost) supera uma árvore de decisão interpretável, sobretudo nos casos TEA–TDAH confundíveis</td></tr>
+      <tr><td>Modelos</td><td>Regressão logística e LDA (referências lineares), árvore de decisão (profundidade 3), Random Forest, XGBoost; classes balanceadas por peso</td></tr>
+      <tr><td>Validação</td><td><code>GroupKFold</code> por <b>instituição de coleta</b> (5 dobras, repetido com várias sementes): a instituição de teste nunca aparece no treino</td></tr>
+      <tr><td>Métricas</td><td>Acurácia balanceada, sensibilidade por classe, AUC; confusão TEA↔TDAH</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<section id="dados">
+  <h2>3. Dados</h2>
+  <table>
+    <thead><tr><th>Base</th><th>Grupos</th><th>Sujeitos</th><th>Acesso</th></tr></thead>
+    <tbody>
+      <tr><td>ABIDE I</td><td>TEA, controles</td><td>1112 (539 TEA, 573 controles), 20 sítios</td><td>aberto (fcp-indi / ABIDE Preprocessed)</td></tr>
+      <tr><td>ABIDE II</td><td>TEA, controles</td><td>1007 (474 TEA, 533 controles), 16 coortes</td><td>aberto</td></tr>
+      <tr><td>ADHD-200</td><td>TDAH, controles</td><td>1062 linhas em 10 sítios</td><td>fenótipo aberto; séries Athena no NITRC (login gratuito)</td></tr>
+      <tr><td>HBN</td><td>TEA, TDAH e outros, mesmo protocolo</td><td>~10 mil (5–21 anos)</td><td>imagem aberta; fenótipo clínico com termo de uso (solicitado)</td></tr>
+      <tr><td>CIFASD</td><td>TEAF</td><td>—</td><td>pedido formal; fora do escopo atual</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Harmonização e limpeza</h3>
+  <ul>
+    <li>Tabela comum com idade, sexo, QI total, verbal e de execução, lateralidade, sítio e <b>instituição</b>
+      (coortes da mesma instituição, como NYU do ABIDE I, ABIDE II e ADHD-200, formam um único grupo de validação).</li>
+    <li>Escalas exclusivas de uma base (ADOS, ADI-R, ADHD index) foram excluídas: a simples presença revelaria o rótulo.</li>
+    <li><b>Sujeitos repetidos:</b> o arquivo de participantes do ADHD-200 repete ~100 sujeitos do NYU, e
+      <b>109 controles aparecem em duas bases</b> (NYU e KKI), identificados por instituição, sexo, idade e os três QIs.
+      Nenhum par repetido tinha diagnóstico divergente.</li>
+    <li>Resultado: <b>2945 sujeitos únicos</b> (1013 TEA, 359 TDAH, 1573 controles). Coorte de análise de 7 a 21 anos,
+      sem TEA com TDAH comórbido: <b>2374</b> (682 TEA, 359 TDAH, 1333 controles).</li>
+  </ul>
+  <figure>
+    <img src="figures/01_demografia_por_grupo.png" alt="Boxplots de idade e QI total e barras de proporção masculina para TEA e controles do ABIDE e controles e TDAH do ADHD-200. As bases diferem em idade e sexo." loading="lazy">
+    <figcaption>Idade, QI e proporção masculina por grupo e base. O ABIDE cobre até 64 anos; os controles do ADHD-200 são
+      bem menos masculinos que os do ABIDE.</figcaption>
+  </figure>
+</section>
+
+<section id="vies">
+  <h2>4. Viés de base e pareamento</h2>
+  <p>Como cada transtorno vem de uma base diferente, um modelo pode "acertar" o diagnóstico reconhecendo a base. Para
+    medir isso, treinamos um classificador para prever a base <b>só entre controles</b>: se ele acerta, há viés.</p>
+  <table>
+    <thead><tr><th>Cenário (só controles; acaso = 0,50)</th><th>Acurácia balanceada</th></tr></thead>
+    <tbody>
+      <tr><td>Fenótipo, todas as idades</td><td>0,60</td></tr>
+      <tr><td>Fenótipo, 7–21 anos</td><td>0,55</td></tr>
+      <tr><td>Fenótipo, 7–21 anos, só as 4 instituições presentes nas duas bases</td><td>0,64</td></tr>
+      <tr class="destaque-linha"><td>Fenótipo, após pareamento por sexo × idade (10 sorteios)</td><td>0,42 ± 0,03</td></tr>
+    </tbody>
+  </table>
+  <p>Sexo e idade explicam a maior parte do viés. O pareamento 1:1:1:1 em estratos de sexo × faixa de 1 ano de idade
+    gerou a coorte de <b>1136 sujeitos</b> (284 TEA, 284 TDAH, 568 controles) e eliminou o viés no fenótipo.</p>
+  <figure>
+    <img src="figures/02_pareamento_antes_depois.png" alt="Curvas de densidade de idade antes e depois do pareamento e barras de proporção masculina: depois do pareamento os quatro grupos têm distribuições de idade sobrepostas e a mesma proporção de meninos." loading="lazy">
+    <figcaption>Distribuições de idade e proporção masculina antes (pontilhado/cinza) e depois do pareamento.</figcaption>
+  </figure>
+</section>
+
+<section id="fenotipo">
+  <h2>5. Modelos com fenótipo (três classes)</h2>
+  <p>Coorte pareada, features comuns às bases: idade, sexo, QI total, verbal, de execução e discrepância VIQ − PIQ
+    (imputação iterativa). 10 repetições da validação por instituição. Acaso = 0,33.</p>
+  <table>
+    <thead><tr><th>Modelo</th><th>Acurácia balanceada</th><th>Sens. TEA</th><th>Sens. TDAH</th><th>Sens. Controle</th><th>AUC macro</th></tr></thead>
+    <tbody>
+      <tr><td>Regressão logística</td><td>0,38 ± 0,01</td><td>0,39</td><td>0,25</td><td>0,49</td><td>0,56</td></tr>
+      <tr><td>LDA</td><td>0,38 ± 0,01</td><td>0,39</td><td>0,25</td><td>0,49</td><td>0,56</td></tr>
+      <tr class="destaque-linha"><td>Árvore de decisão</td><td>0,40 ± 0,02</td><td>0,32</td><td>0,30</td><td>0,57</td><td>0,57</td></tr>
+      <tr><td>Random Forest</td><td>0,38 ± 0,01</td><td>0,40</td><td>0,21</td><td>0,53</td><td>0,56</td></tr>
+      <tr><td>XGBoost</td><td>0,37 ± 0,02</td><td>0,37</td><td>0,20</td><td>0,55</td><td>0,55</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li>Pouco sinal em todos os modelos; nenhum supera a árvore. Árvores mais rasas generalizam melhor (profundidade 1: 0,42).</li>
+    <li>TDAH é a classe mais difícil; ~30% dos casos TEA/TDAH são classificados como o outro transtorno.</li>
+    <li>A árvore tem leitura clínica coerente: QI verbal baixo, ou muito abaixo do QI de execução, aponta TEA.</li>
+  </ul>
+  <div class="duas-figuras">
+    <figure>
+      <img src="figures/03_arvore_fenotipo.png" alt="Árvore de decisão de profundidade 3 com divisões em QI verbal, QI total, discrepância VIQ menos PIQ e QI de execução." loading="lazy">
+      <figcaption>Árvore de decisão (profundidade 3) treinada com toda a coorte, para leitura dos pontos de corte.</figcaption>
+    </figure>
+    <figure>
+      <img src="figures/03_coeficientes_logistica.png" alt="Barras com os coeficientes padronizados da regressão logística por classe: QI total alto favorece controle e QI total baixo favorece TEA." loading="lazy">
+      <figcaption>Coeficientes da regressão logística (por desvio padrão).</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="conectividade">
+  <h2>6. Conectividade funcional</h2>
+  <p>Séries temporais de fMRI de repouso por região, transformadas em matrizes de correlação (z de Fisher).</p>
+  <ul>
+    <li><b>Fontes:</b> ABIDE I processado pelo C-PAC (<code>filt_noglobal</code>); ADHD-200 pelo pipeline Athena. O ABIDE II
+      não tem séries compatíveis, e o C-PAC do ADHD-200 no repositório público cobre só 162 sujeitos.</li>
+    <li><b>Atlas:</b> os dois "CC200" (ABIDE e Athena) se mostraram parcelações diferentes (sobreposição típica de Dice
+      0,39). Usamos o <b>AAL</b>, com o mesmo arquivo nos dois pipelines (116 regiões, Dice médio 0,92 por região).</li>
+    <li>Após controle de qualidade: <b>1819 sujeitos × 6441 pares</b> de 114 regiões (922 ABIDE I, 897 ADHD-200).</li>
+  </ul>
+
+  <h3>O pipeline é perfeitamente identificável</h3>
+  <table>
+    <thead><tr><th>Prever a base entre controles (acaso = 0,50)</th><th>Regressão logística</th><th>Random Forest</th></tr></thead>
+    <tbody>
+      <tr><td>Conectividade bruta, validação por instituição</td><td>0,999</td><td>0,998</td></tr>
+      <tr><td>Só as 4 instituições presentes nas duas bases</td><td>1,000</td><td>0,996</td></tr>
+      <tr><td>Conectividade normalizada por sujeito</td><td>0,998</td><td>0,999</td></tr>
+    </tbody>
+  </table>
+  <p class="alerta">Consequência: na análise de três classes, <b>nenhum TEA foi classificado como TDAH nem o contrário</b>,
+    e os controles se dividiram conforme a base. Com estes dados, a comparação TEA × TDAH mede o pipeline, não o
+    diagnóstico. Por isso, as análises seguintes são feitas <b>dentro de cada base</b>.</p>
+  <figure>
+    <img src="figures/04_conectividade_3classes_confusao.png" alt="Matrizes de confusão de três classes com conectividade: TEA e TDAH nunca são confundidos entre si, enquanto os controles se dividem entre as duas classes." loading="lazy">
+    <figcaption>Três classes com conectividade (coorte pareada com imagem, 204 por grupo): o padrão reflete a base, não o diagnóstico.</figcaption>
+  </figure>
+</section>
+
+<section id="sitio">
+  <h2>7. Efeito de sítio nas tarefas dentro de cada base</h2>
+  <p>Com conectividade bruta, TDAH × Controle ficou <b>abaixo do acaso</b> (0,40–0,44), sinal de efeito de sítio: a proporção
+    de TDAH varia muito entre instituições (Pittsburgh e WashU quase só controles). Duas correções:</p>
+  <ol>
+    <li>recuperar os controles do ADHD-200 que a remoção de duplicados havia atribuído ao ABIDE (530 controles em vez de 440);</li>
+    <li>padronizar cada feature dentro de cada instituição, sem usar rótulos.</li>
+  </ol>
+  <table>
+    <thead><tr><th>Cenário (acaso = 0,50)</th><th>Regressão logística</th><th>Árvore</th><th>Random Forest</th><th>XGBoost</th></tr></thead>
+    <tbody>
+      <tr><td>TDAH × Controle, bruto</td><td>0,45</td><td>0,45</td><td>0,45</td><td>0,45</td></tr>
+      <tr><td>TDAH × Controle, padronizado por instituição</td><td>0,50</td><td>0,50</td><td>0,49</td><td>0,48</td></tr>
+      <tr><td>TDAH × Controle, padronizado, sem Pittsburgh/WashU</td><td>0,53</td><td>0,50</td><td>0,52</td><td>0,51</td></tr>
+      <tr><td>TEA × Controle, bruto</td><td>0,64</td><td>0,53</td><td>0,61</td><td>0,63</td></tr>
+      <tr class="destaque-linha"><td>TEA × Controle, padronizado por instituição</td><td>0,65</td><td>0,55</td><td>0,61</td><td>0,64</td></tr>
+    </tbody>
+  </table>
+  <p>A padronização corrigiu o resultado abaixo do acaso, mas não revelou sinal de TDAH. Para TEA, ajudou levemente.</p>
+  <figure>
+    <img src="figures/05_padronizacao_por_instituicao.png" alt="Barras horizontais de acurácia balanceada por cenário e modelo: TEA contra controle fica em torno de 0,6 a 0,65, TDAH contra controle em torno de 0,5." loading="lazy">
+    <figcaption>Efeito da padronização por instituição nas duas tarefas.</figcaption>
+  </figure>
+</section>
+
+<section id="fusao">
+  <h2>8. Fenótipo + conectividade</h2>
+  <p>Fenótipo (idade e QIs; sexo excluído porque as amostras não são pareadas) combinado com a conectividade padronizada.
+    <b>Fusão precoce:</b> todas as features num único modelo. <b>Fusão tardia:</b> um modelo por fonte, média das
+    probabilidades. 3 repetições.</p>
+
+  <h3>TEA × Controle (ABIDE I, 732 sujeitos, 17 instituições)</h3>
+  <table>
+    <thead><tr><th>Modelo</th><th>Fenótipo</th><th>Conectividade</th><th>Fusão precoce</th><th>Fusão tardia</th></tr></thead>
+    <tbody>
+      <tr class="destaque-linha"><td>Regressão logística</td><td>0,59</td><td>0,64</td><td>0,65</td><td><b>0,66</b> (AUC 0,71)</td></tr>
+      <tr><td>XGBoost</td><td>0,56</td><td>0,64</td><td>0,65</td><td>0,64</td></tr>
+      <tr><td>Random Forest</td><td>0,58</td><td>0,61</td><td>0,62</td><td>0,61</td></tr>
+      <tr><td>Árvore de decisão</td><td>0,57</td><td>0,55</td><td>0,59</td><td>0,59</td></tr>
+    </tbody>
+  </table>
+
+  <h3>TDAH × Controle (ADHD-200, 853 sujeitos, 7 instituições)</h3>
+  <table>
+    <thead><tr><th>Modelo</th><th>Fenótipo</th><th>Conectividade</th><th>Fusão precoce</th><th>Fusão tardia</th></tr></thead>
+    <tbody>
+      <tr class="destaque-linha"><td>Regressão logística</td><td><b>0,57</b> (AUC 0,59)</td><td>0,50</td><td>0,50</td><td>0,52</td></tr>
+      <tr><td>Árvore de decisão</td><td>0,54</td><td>0,50</td><td>0,53</td><td>0,51</td></tr>
+      <tr><td>Random Forest</td><td>0,52</td><td>0,49</td><td>0,51</td><td>0,52</td></tr>
+      <tr><td>XGBoost</td><td>0,52</td><td>0,48</td><td>0,48</td><td>0,51</td></tr>
+    </tbody>
+  </table>
+  <ul>
+    <li><b>TEA:</b> as duas fontes se complementam; a fusão tardia dá o melhor resultado do projeto (+0,02 sobre a conectividade sozinha).</li>
+    <li><b>TDAH:</b> o sinal vem do QI (controles 114 × TDAH 106); somar conectividade só acrescenta ruído.
+      Cuidado: VIQ/PIQ faltam mais nos controles (36%) que no TDAH (23%).</li>
+  </ul>
+  <figure>
+    <img src="figures/06_fusao_fenotipo_conectividade.png" alt="Dois painéis de barras por modelo e conjunto de features. Em TEA contra controle, as fusões com regressão logística chegam a 0,66; em TDAH contra controle, só o fenótipo fica acima de 0,5." loading="lazy">
+    <figcaption>Acurácia balanceada por modelo e conjunto de features nas duas tarefas.</figcaption>
+  </figure>
+</section>
+
+<section id="conclusoes">
+  <h2>9. Conclusões</h2>
+  <div class="resumo-final">
+    <svg viewBox="0 0 720 300" role="img" aria-labelledby="svg-titulo svg-desc" class="grafico">
+      <title id="svg-titulo">Melhor acurácia balanceada por análise</title>
+      <desc id="svg-desc">Barras horizontais: fenótipo com três classes 0,40 (acaso 0,33); TEA contra controle com conectividade 0,65 e com fusão 0,66; TDAH contra controle com conectividade 0,53 e com fenótipo 0,57 (acaso 0,50).</desc>
+      <g class="eixo">
+        <line x1="260" y1="20" x2="260" y2="260"/>
+        <text x="260" y="285" text-anchor="middle">0</text>
+        <text x="410" y="285" text-anchor="middle">0,25</text>
+        <text x="560" y="285" text-anchor="middle">0,50</text>
+        <text x="710" y="285" text-anchor="middle">0,75</text>
+        <line class="grade" x1="410" y1="20" x2="410" y2="262"/>
+        <line class="grade" x1="560" y1="20" x2="560" y2="262"/>
+        <line class="grade" x1="710" y1="20" x2="710" y2="262"/>
+      </g>
+      <g class="barras">
+        <text x="250" y="52" text-anchor="end">Fenótipo, 3 classes (árvore)</text>
+        <rect x="260" y="36" width="240" height="24" class="b1"/><text x="506" y="53" class="valor">0,40</text>
+        <line class="acaso" x1="458" y1="32" x2="458" y2="64"/>
+        <text x="250" y="102" text-anchor="end">TEA × Controle, conectividade</text>
+        <rect x="260" y="86" width="390" height="24" class="b2"/><text x="656" y="103" class="valor">0,65</text>
+        <text x="250" y="152" text-anchor="end">TEA × Controle, fusão tardia</text>
+        <rect x="260" y="136" width="396" height="24" class="b2"/><text x="662" y="153" class="valor">0,66</text>
+        <text x="250" y="202" text-anchor="end">TDAH × Controle, conectividade</text>
+        <rect x="260" y="186" width="318" height="24" class="b3"/><text x="584" y="203" class="valor">0,53</text>
+        <text x="250" y="252" text-anchor="end">TDAH × Controle, fenótipo (QI)</text>
+        <rect x="260" y="236" width="342" height="24" class="b3"/><text x="608" y="253" class="valor">0,57</text>
+        <line class="acaso" x1="560" y1="82" x2="560" y2="264"/>
+      </g>
+    </svg>
+    <p class="nota">Melhor acurácia balanceada de cada análise. Linhas verticais tracejadas: acaso (0,33 para três classes, 0,50 para tarefas binárias).</p>
+  </div>
+  <ol>
+    <li><b>O desenho com bases separadas não permite responder TEA × TDAH.</b> O fenótipo carrega viés de recrutamento
+      (corrigível por pareamento); a conectividade carrega o pipeline (não corrigível com esses dados).</li>
+    <li><b>TEA × Controle tem sinal reproduzível</b> entre instituições: 0,64–0,66, melhor com fenótipo + conectividade.</li>
+    <li><b>TDAH × Controle quase não tem sinal</b> na conectividade entre instituições; o QI é o que mais ajuda.</li>
+    <li><b>Hipótese do canvas:</b> comitês &gt; árvore quando há sinal, mas a regressão logística regularizada empata ou vence.
+      Para estes dados, simplicidade e regularização importam mais que a complexidade do modelo.</li>
+    <li><b>Contribuição metodológica:</b> testes de viés de base entre controles, remoção de sujeitos repetidos entre
+      bases e validação por instituição evitam resultados inflados comuns na literatura.</li>
+  </ol>
+</section>
+
+<section id="limitacoes">
+  <h2>10. Limitações e próximos passos</h2>
+  <h3>Limitações</h3>
+  <ul>
+    <li>Amostras majoritariamente masculinas e de 7 a 21 anos.</li>
+    <li>Testes de QI diferentes entre sítios; VIQ/PIQ ausentes em ~23% (imputados).</li>
+    <li>Hiperparâmetros fixos para árvore, RF e XGBoost; 3 repetições nas análises de conectividade.</li>
+    <li>Conectividade apenas por correlação de Pearson, sem controle adicional de movimento além do QC dos pipelines.</li>
+  </ul>
+  <h3>Próximos passos</h3>
+  <ul>
+    <li><b>HBN:</b> pedido de acesso ao fenótipo clínico (consenso diagnóstico, KSADS, CBCL, SRS, Conners, WISC) em
+      preparação. Permite TEA × TDAH no mesmo protocolo e com escalas clínicas comuns aos grupos.</li>
+    <li>Reprocessar as séries de todas as bases com um único pipeline (fMRIPrep disponível no repositório público).</li>
+    <li>Analisar os 141 casos de TEA com TDAH comórbido como teste dos casos confundíveis.</li>
+    <li>TEAF via CIFASD, mediante pedido de acesso.</li>
+  </ul>
+</section>
+
+<section id="reproducao">
+  <h2>11. Reprodutibilidade</h2>
+  <p>Python 3.12; scikit-learn, XGBoost, nilearn. Os dados não são redistribuídos; os scripts baixam as fontes públicas.</p>
+  <table>
+    <thead><tr><th>Etapa</th><th>Código</th></tr></thead>
+    <tbody>
+      <tr><td>Download do fenótipo</td><td><code>src/download_phenotypes.py</code></td></tr>
+      <tr><td>Harmonização e remoção de repetidos</td><td><code>src/harmonize.py</code></td></tr>
+      <tr><td>Pareamento e teste de viés</td><td><code>src/matching.py</code></td></tr>
+      <tr><td>Download das séries do ABIDE I</td><td><code>src/download_connectivity.py --atlas aal</code></td></tr>
+      <tr><td>Séries do ADHD-200 (Athena)</td><td>download manual no NITRC (ver <code>data/README.md</code>)</td></tr>
+      <tr><td>Matrizes de conectividade</td><td><code>src/connectivity.py</code></td></tr>
+      <tr><td>Modelos e avaliação</td><td><code>src/evaluation.py</code>, <code>src/fusion.py</code></td></tr>
+      <tr><td>Análises</td><td>notebooks 01 a 06</td></tr>
+    </tbody>
+  </table>
+  <p class="nota">Agradecimentos: ABIDE (Autism Brain Imaging Data Exchange), ADHD-200 Consortium e The Neuro Bureau
+    (pipeline Athena), Preprocessed Connectomes Project e International Neuroimaging Data-sharing Initiative (INDI).</p>
+</section>
+
+</main>
+
+<footer class="largura rodape">
+  <p>Projeto acadêmico da disciplina BIF0051 (PPgBioinfo/UFRN). Os modelos são exploratórios e não se destinam ao uso clínico.</p>
+</footer>
+</body>
+</html>

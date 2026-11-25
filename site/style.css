@@ -1,0 +1,91 @@
+:root {
+  --fundo: #fbfaf7;
+  --texto: #1f2328;
+  --suave: #5b6169;
+  --linha: #e3e0d8;
+  --cartao: #ffffff;
+  --acento: #2f5d8a;
+  --acento-claro: #e8eff6;
+  --alerta: #fff4e5;
+  --alerta-borda: #d9822b;
+  --b1: #7a8899;
+  --b2: #2f5d8a;
+  --b3: #b5652b;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fundo: #15181c;
+    --texto: #e6e6e3;
+    --suave: #a3a8ae;
+    --linha: #2d3238;
+    --cartao: #1c2025;
+    --acento: #8fb6dc;
+    --acento-claro: #1f2b37;
+    --alerta: #2b2218;
+    --alerta-borda: #d9822b;
+    --b1: #8995a3;
+    --b2: #6f9bc6;
+    --b3: #d38a52;
+  }
+  figure img { background: #fff; border-radius: 4px; }
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+  font: 17px/1.65 "Source Serif 4", Georgia, "Times New Roman", serif;
+}
+h1, h2, h3, .sobretitulo, .meta, nav, table, figcaption, .destaque, .nota, footer, .grafico text {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+}
+.largura { max-width: 960px; margin: 0 auto; padding: 0 24px; }
+.capa { border-bottom: 1px solid var(--linha); padding: 56px 0 40px; background: var(--cartao); }
+.sobretitulo { color: var(--acento); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 12px; }
+h1 { font-size: clamp(28px, 4vw, 40px); line-height: 1.2; margin: 0 0 16px; font-weight: 700; }
+.subtitulo { font-size: 19px; color: var(--suave); margin: 0 0 16px; }
+.meta { font-size: 14px; color: var(--suave); margin: 0; }
+.sumario { margin-top: 32px; font-size: 15px; }
+.sumario ol { columns: 2; column-gap: 32px; padding-left: 20px; margin: 8px 0 0; }
+.sumario a { color: var(--acento); text-decoration: none; }
+.sumario a:hover { text-decoration: underline; }
+section { padding: 32px 0; border-bottom: 1px solid var(--linha); }
+h2 { font-size: 26px; margin: 8px 0 16px; }
+h3 { font-size: 19px; margin: 28px 0 12px; }
+a { color: var(--acento); }
+code { font-size: .88em; background: var(--acento-claro); padding: 1px 5px; border-radius: 4px; }
+.destaques { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; margin: 24px 0; }
+.destaque { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px; padding: 18px 20px; }
+.destaque .numero { display: block; font-size: 36px; font-weight: 700; color: var(--acento); line-height: 1.1; font-variant-numeric: tabular-nums; }
+.destaque .rotulo { display: block; font-size: 14px; color: var(--suave); margin-top: 6px; line-height: 1.45; }
+table { width: 100%; border-collapse: collapse; font-size: 14.5px; margin: 16px 0; background: var(--cartao); }
+th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+th { font-weight: 600; background: var(--acento-claro); }
+td:not(:first-child), th:not(:first-child) { font-variant-numeric: tabular-nums; }
+tr.destaque-linha td { background: var(--acento-claro); }
+figure { margin: 24px 0; }
+figure img { width: 100%; height: auto; border: 1px solid var(--linha); border-radius: 6px; }
+figcaption { font-size: 14px; color: var(--suave); margin-top: 8px; }
+.duas-figuras { display: grid; grid-template-columns: 2fr 1fr; gap: 16px; align-items: start; }
+.alerta { background: var(--alerta); border-left: 4px solid var(--alerta-borda); padding: 14px 18px; border-radius: 4px; }
+.nota { font-size: 14px; color: var(--suave); }
+.resumo-final { background: var(--cartao); border: 1px solid var(--linha); border-radius: 10px; padding: 16px 20px; margin: 16px 0 24px; }
+.grafico { width: 100%; height: auto; }
+.grafico text { font-size: 13px; fill: var(--texto); }
+.grafico .eixo line { stroke: var(--suave); stroke-width: 1; }
+.grafico .eixo .grade { stroke: var(--linha); }
+.grafico .eixo text { fill: var(--suave); font-size: 12px; }
+.grafico .valor { font-weight: 600; }
+.grafico .b1 { fill: var(--b1); }
+.grafico .b2 { fill: var(--b2); }
+.grafico .b3 { fill: var(--b3); }
+.grafico .acaso { stroke: var(--texto); stroke-width: 2; stroke-dasharray: 4 3; }
+.rodape { padding: 24px; font-size: 14px; color: var(--suave); }
+@media (max-width: 720px) {
+  .sumario ol { columns: 1; }
+  .duas-figuras { grid-template-columns: 1fr; }
+  body { font-size: 16px; }
+  table { font-size: 13px; }
+  th, td { padding: 7px 8px; }
+}

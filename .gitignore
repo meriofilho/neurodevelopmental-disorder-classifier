@@ -25,3 +25,9 @@ venv/
 ~$*
 Thumbs.db
 desktop.ini
+
+# Site gerado localmente (o GitHub Actions monta o mesmo a partir de site/ e results/figures)
+_site/
+
+# Configuração local do Claude Code
+.claude/
