@@ -41,6 +41,7 @@ reports/       slides e texto da apresentação
 | [04](notebooks/04_conectividade_aal.ipynb) | Conectividade funcional AAL (6441 pares): viés de pipeline e modelos | Controles ABIDE × ADHD-200 separáveis com 0,999 (pipelines diferentes), então TEA × TDAH não é comparável. TEA × Controle no ABIDE I: logística 0,64, XGBoost 0,63, RF 0,61, árvore 0,53. TDAH × Controle no ADHD-200: abaixo do acaso (efeito de sítio) |
 | [05](notebooks/05_conectividade_efeito_sitio.ipynb) | Efeito de sítio: recupera controles do ADHD-200 e padroniza features por instituição | TDAH × Controle sai de abaixo do acaso para 0,50–0,53 (sem sinal real). TEA × Controle melhora levemente: logística 0,65, XGBoost 0,64, RF 0,61, árvore 0,55 |
 | [06](notebooks/06_fenotipo_conectividade.ipynb) | Fenótipo (idade, QI) + conectividade: fusão precoce e tardia | TEA × Controle: melhor resultado do projeto, fusão tardia com logística 0,66 (AUC 0,71). TDAH × Controle: o sinal vem só do QI (logística 0,57); somar conectividade piora |
+| [07](notebooks/07_pesos_sexo_idade.ipynb) | Pesos de sexo × idade (`src/weighting.py`) em vez de pareamento: usa os 2374 sujeitos | Só pesos de classe inflam o resultado (logística 0,45 → 0,38 com teste ponderado). Com pesos de sexo × idade (n efetivo ~1890), o resultado é o do pareamento: árvore 0,40, logística 0,39, RF e XGBoost 0,37. Retirar a idade não piora: ela não tem sinal diagnóstico |
 
 Para reproduzir: `src/download_phenotypes.py` → `src/harmonize.py` → notebooks em ordem.
 

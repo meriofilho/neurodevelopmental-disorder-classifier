@@ -47,6 +47,19 @@
     },
   };
 
+  // notebook 07: pareamento × pesos de sexo e idade (média de 10 sementes)
+  const PESOS = {
+    cats: ["Pareada\n1136", "Completa, só classe\n(teste sem pesos)", "Completa, só classe\n(teste com pesos)",
+      "Completa\nsexo × idade", "Sexo × idade\nsem a feature idade"],
+    acc: [
+      { log: .378, tree: .396, rf: .383, xgb: .374 },
+      { log: .448, tree: .385, rf: .402, xgb: .410 },
+      { log: .382, tree: .361, rf: .370, xgb: .371 },
+      { log: .390, tree: .404, rf: .372, xgb: .374 },
+      { log: .404, tree: .404, rf: .374, xgb: .380 },
+    ],
+  };
+
   const FENO3 = {
     cats: ["Acurácia balanceada", "Sens. TEA", "Sens. TDAH", "Sens. Controle"],
     acc: {
@@ -304,6 +317,15 @@
     alternarTabela(root);
   }
 
+  function pesos() {
+    const root = document.getElementById("g-pesos");
+    if (!root) return;
+    const dados = Object.fromEntries(PESOS.cats.map((c, i) => [c, PESOS.acc[i]]));
+    barrasAgrupadas(root, { cats: PESOS.cats, dados, yMin: 0.3, yMax: 0.5, passo: 0.05, acaso: 1 / 3, altura: 360,
+      aria: "Pareamento comparado a pesos de sexo e idade, por condição e modelo" });
+    alternarTabela(root);
+  }
+
   function sitio() {
     const root = document.getElementById("g-sitio");
     if (!root) return;
@@ -360,6 +382,6 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
-    principal(); feno3(); sitio(); vies(); scrollspy(); tema(); menu();
+    principal(); feno3(); pesos(); sitio(); vies(); scrollspy(); tema(); menu();
   });
 })();

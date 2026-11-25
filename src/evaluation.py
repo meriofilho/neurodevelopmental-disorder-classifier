@@ -8,7 +8,7 @@ from sklearn.impute import IterativeImputer
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
 from sklearn.metrics import balanced_accuracy_score, confusion_matrix, recall_score, roc_auc_score
 from sklearn.model_selection import GroupKFold, cross_val_predict
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils.class_weight import compute_sample_weight
@@ -21,9 +21,12 @@ CLASSES = ["Controle", "TDAH", "TEA"]  # códigos 0, 1, 2
 class BalancedXGB(XGBClassifier):
     """XGBoost com pesos de amostra balanceados por classe (equivalente a class_weight='balanced')."""
 
-    def fit(self, X, y, **kw):
-        kw.setdefault("sample_weight", compute_sample_weight("balanced", y))
-        return super().fit(X, y, **kw)
+    def fit(self, X, y, sample_weight=None, **kw):
+        # Pesos externos (ex.: balanceamento de sexo × idade) são multiplicados pelos pesos de classe.
+        w = compute_sample_weight("balanced", y)
+        if sample_weight is not None:
+            w = w * np.asarray(sample_weight, float)
+        return super().fit(X, y, sample_weight=w, **kw)
 
 
 def features(df: pd.DataFrame, conjunto: str = "qi") -> pd.DataFrame:
@@ -102,45 +105,61 @@ def make_models_conn(seed: int = RANDOM_STATE, tree_depth: int = 3) -> dict:
     }
 
 
-def metrics_binary(y: np.ndarray, proba: np.ndarray, nomes=("negativo", "positivo")) -> dict:
-    """Métricas para tarefas binárias (classe 1 = positivo)."""
+def metrics_binary(y: np.ndarray, proba: np.ndarray, nomes=("negativo", "positivo"), sample_weight=None) -> dict:
+    """Métricas para tarefas binárias (classe 1 = positivo). `sample_weight` = avaliação ponderada."""
     pred = proba.argmax(axis=1)
-    rec = recall_score(y, pred, labels=[0, 1], average=None)
+    rec = recall_score(y, pred, labels=[0, 1], average=None, sample_weight=sample_weight)
     return {
-        "acc_balanceada": balanced_accuracy_score(y, pred),
+        "acc_balanceada": balanced_accuracy_score(y, pred, sample_weight=sample_weight),
         f"sens_{nomes[1]}": rec[1], f"espec_{nomes[0]}": rec[0],
-        "auc": roc_auc_score(y, proba[:, 1]),
+        "auc": roc_auc_score(y, proba[:, 1], sample_weight=sample_weight),
     }
 
 
-def metrics(y: np.ndarray, proba: np.ndarray) -> dict:
+def metrics(y: np.ndarray, proba: np.ndarray, sample_weight=None) -> dict:
     if proba.shape[1] == 2:
-        return metrics_binary(y, proba)
+        return metrics_binary(y, proba, sample_weight=sample_weight)
+    w = np.ones(len(y)) if sample_weight is None else np.asarray(sample_weight, float)
     pred = proba.argmax(axis=1)
-    rec = recall_score(y, pred, labels=[0, 1, 2], average=None)
+    rec = recall_score(y, pred, labels=[0, 1, 2], average=None, sample_weight=w)
     tea_tdah = np.isin(y, [1, 2])
     confusao = ((y == 2) & (pred == 1)) | ((y == 1) & (pred == 2))
     return {
-        "acc_balanceada": balanced_accuracy_score(y, pred),
+        "acc_balanceada": balanced_accuracy_score(y, pred, sample_weight=w),
         "sens_Controle": rec[0], "sens_TDAH": rec[1], "sens_TEA": rec[2],
-        "auc_macro_ovr": roc_auc_score(y, proba, multi_class="ovr", average="macro"),
+        "auc_macro_ovr": roc_auc_score(y, proba, multi_class="ovr", average="macro", sample_weight=w),
         # Entre os casos TEA/TDAH reais: fração classificada como o OUTRO transtorno.
-        "confusao_TEA_TDAH": confusao[tea_tdah].mean(),
+        "confusao_TEA_TDAH": np.average(confusao[tea_tdah], weights=w[tea_tdah]),
     }
 
 
-def repeated_group_cv(model, X, y, groups, seeds=range(10), n_splits=5, metric_fn=None):
+def _fit_params(model, w) -> dict:
+    """Encaminha sample_weight ao último passo (Pipeline) ou ao próprio estimador."""
+    if w is None:
+        return {}
+    w = np.asarray(w, float)
+    if isinstance(model, Pipeline):
+        return {f"{model.steps[-1][0]}__sample_weight": w}
+    return {"sample_weight": w}
+
+
+def repeated_group_cv(model, X, y, groups, seeds=range(10), n_splits=5, metric_fn=None,
+                      fit_weight=None, eval_weight=None):
     """Repete GroupKFold embaralhado (grupos = sítio) com várias sementes.
 
     Não usa StratifiedGroupKFold: com ~23 sítios ele gera a MESMA divisão para qualquer semente.
+    `fit_weight`: pesos por sujeito no treino (multiplicam os de classe). `eval_weight`: pesos nas métricas do teste.
 
     Retorna (tabela de métricas por semente, probabilidades fora-da-dobra da primeira semente).
     """
+    metric_fn = metric_fn or metrics
+    extra = {} if eval_weight is None else {"sample_weight": np.asarray(eval_weight, float)}
     linhas, primeira = [], None
     for s in seeds:
         cv = GroupKFold(n_splits=n_splits, shuffle=True, random_state=s)
-        proba = cross_val_predict(model, X, y, groups=groups, cv=cv, method="predict_proba")
-        linhas.append({"semente": s, **(metric_fn or metrics)(y, proba)})
+        proba = cross_val_predict(model, X, y, groups=groups, cv=cv, method="predict_proba",
+                                  params=_fit_params(model, fit_weight))
+        linhas.append({"semente": s, **metric_fn(y, proba, **extra)})
         if primeira is None:
             primeira = proba
     return pd.DataFrame(linhas), primeira

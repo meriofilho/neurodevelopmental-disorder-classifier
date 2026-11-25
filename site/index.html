@@ -239,6 +239,26 @@
         <figcaption>Árvore (profundidade 3) treinada com toda a coorte, para leitura dos pontos de corte.</figcaption></figure>
       <figure><img src="figures/03_coeficientes_logistica.png" alt="Coeficientes padronizados por classe: QI total alto favorece controle e baixo favorece TEA." loading="lazy">
         <figcaption>Coeficientes da regressão logística por desvio padrão.</figcaption></figure></div></details>
+
+    <h3 class="sub" id="pesos">Pesos de sexo × idade em vez de pareamento</h3>
+    <p>O pareamento descarta mais da metade da coorte (2374 → 1136). Como alternativa, cada participante recebe um peso
+      1 / P(grupo | sexo, idade): os quatro grupos passam a ter a mesma distribuição de sexo e idade sem perder ninguém
+      (diferenças padronizadas ≤ 0,07; tamanho efetivo ~1890). O teste deve ser ponderado também; do contrário,
+      o atalho de sexo e idade continua parecendo desempenho.</p>
+    <div class="chart-card" id="g-pesos">
+      <div class="chart-top"><div><div class="chart-title">Pareamento × pesos: TEA × TDAH × Controle só com fenótipo</div>
+        <div class="chart-sub">Coorte 7–21 anos · 2374 participantes (pareada: 1136) · notebook 07</div></div></div>
+      <div class="legend"></div>
+      <div class="chart"></div>
+      <div class="chart-foot"><span class="note">GroupKFold por instituição · 5 dobras × 10 repetições · LDA fora (não aceita pesos)</span>
+        <button class="linkbtn" type="button" aria-expanded="false">Ver como tabela</button></div>
+      <div class="tbl-view"></div>
+    </div>
+    <div class="takeaways">
+      <div class="take"><div class="ic c2">!</div><h4>Só pesos de classe inflam</h4><p>A logística vai a 0,45, mas avaliada com sexo e idade equilibrados cai para 0,38: 0,07 era atalho.</p></div>
+      <div class="take"><div class="ic c1">=</div><h4>Pesos = pareamento</h4><p>Com o dobro da amostra efetiva, o resultado é o mesmo (0,37–0,40). O limite é de sinal, não de tamanho.</p></div>
+      <div class="take"><div class="ic c3">✓</div><h4>Idade não diagnostica</h4><p>Tirar a idade não piora nenhum modelo: ela só marcava o recrutamento de cada base.</p></div>
+    </div>
   </div>
 </section>
 
@@ -338,7 +358,7 @@
     </div>
     <div class="grid-2">
       <div class="card"><h4>1 · O desenho com bases separadas não responde TEA × TDAH</h4>
-        <p>O fenótipo carrega viés de recrutamento (corrigível por pareamento); a conectividade carrega o pipeline (não corrigível com estes dados).</p></div>
+        <p>O fenótipo carrega viés de recrutamento (corrigível por pareamento ou pesos de sexo × idade); a conectividade carrega o pipeline (não corrigível com estes dados).</p></div>
       <div class="card"><h4>2 · TEA × Controle tem sinal reproduzível</h4>
         <p>0,64–0,66 entre instituições, melhor com fenótipo + conectividade.</p></div>
       <div class="card"><h4>3 · TDAH × Controle quase não tem sinal</h4>
@@ -386,12 +406,12 @@
       <tbody>
         <tr><td>Download do fenótipo</td><td><code>src/download_phenotypes.py</code></td></tr>
         <tr><td>Harmonização e participantes repetidos</td><td><code>src/harmonize.py</code></td></tr>
-        <tr><td>Pareamento e teste de viés</td><td><code>src/matching.py</code></td></tr>
+        <tr><td>Pareamento, pesos de sexo × idade e teste de viés</td><td><code>src/matching.py</code>, <code>src/weighting.py</code></td></tr>
         <tr><td>Séries do ABIDE I</td><td><code>src/download_connectivity.py --atlas aal</code></td></tr>
         <tr><td>Séries do ADHD-200 (Athena)</td><td>download no NITRC, ver <code>data/README.md</code></td></tr>
         <tr><td>Matrizes de conectividade</td><td><code>src/connectivity.py</code></td></tr>
         <tr><td>Modelos e avaliação</td><td><code>src/evaluation.py</code>, <code>src/fusion.py</code></td></tr>
-        <tr><td>Análises</td><td>notebooks <code>01</code> a <code>06</code></td></tr>
+        <tr><td>Análises</td><td>notebooks <code>01</code> a <code>07</code></td></tr>
       </tbody></table></div>
     <p style="margin-top:20px;color:var(--muted);font-size:14px">Agradecimentos: ABIDE, ADHD-200 Consortium, The Neuro Bureau (pipeline Athena),
       Preprocessed Connectomes Project e International Neuroimaging Data-sharing Initiative (INDI).</p>
