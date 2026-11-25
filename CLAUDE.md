@@ -13,6 +13,7 @@ imbalanced-learn, nilearn, shap, umap-learn. Novas dependências: adicionar em `
 
 ## Convenções
 - Fenótipos em `data/raw/` (ver `data/README.md`); ADHD-200 `.tsv` deve ser lido com `encoding="latin1"`; ABIDE usa `-9999` como ausente.
+- Conectividade: atlas **AAL** (116 ROIs; o CC200 do ABIDE e o do Athena são parcelações diferentes). ABIDE I = C-PAC `filt_noglobal` em `data/raw/abide/rois_aal_filt_noglobal/`; ADHD-200 = Athena `sfnwmrda*_aal_TCs.1D` em `data/raw/adhd200/athena/extracted_aal/`. ABIDE II não tem conectividade. Pipelines diferentes: testar viés entre controles e harmonizar (ComBat) antes de modelar.
 - Tabela de trabalho: `harmonize()` em `src/harmonize.py` (remove sujeitos repetidos) e coorte `data/interim/cohort_7_21.csv`.
 - `data/raw/` é somente leitura; todo processamento grava em `data/interim/` ou `data/processed/`.
 - Dados nunca vão para o git (ver `.gitignore`).

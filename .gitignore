@@ -1,8 +1,5 @@
-# Dados (grandes e com termos de uso)
-data/raw/**
-data/interim/**
-data/processed/**
-!data/**/.gitkeep
+# Dados (grandes e com termos de uso): tudo em data/ fica fora, exceto o README
+data/*
 !data/README.md
 
 # Slides das aulas (material de terceiros, ~29 MB)

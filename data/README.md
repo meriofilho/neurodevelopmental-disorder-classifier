@@ -18,6 +18,45 @@ Para refazer: `.venv/Scripts/python.exe src/download_phenotypes.py` (bucket púb
 | `raw/abide2/participants_bids/<sítio>.tsv` | ABIDE II: 1007 sujeitos (474 TEA, 533 controles) em 16 coortes. Sem ETHZ_1, UCLA_Long e UPSM_Long (sem `participants.tsv` no bucket). TDAH comórbido em `nonasd_psydx_label` |
 | `raw/adhd200/participants_bids/<sítio>.tsv` | ADHD-200: 1062 linhas em 10 sítios. Brown (26) sem diagnóstico, pois é test release. Codificação **latin-1**. **O NYU repete ~100 sujeitos** |
 
+## Conectividade funcional (fMRI de repouso, séries temporais por ROI)
+**Atlas escolhido: AAL (116 regiões).** Arquivo de atlas idêntico nos dois pipelines (`aal_mask_pad`, rótulos
+2001–9170). Comparado em 25/11/2026: mesmos 116 rótulos, Dice médio por região 0,92 (mín. 0,81); a diferença vem da
+resolução (ABIDE 3 mm, Athena 4 mm). Atlas em `raw/atlases/`.
+
+O **CC200 foi descartado**: o "CC200" do ABIDE (`cc200_roi_atlas`, 200 regiões, 3 mm) e o do Athena
+(`ADHD200_parcellate_200`, 190 regiões, 4 mm) são parcelações diferentes (Dice típico 0,39, centros a ~9 mm).
+Os arquivos baixados continuam em `raw/abide/rois_cc200_filt_noglobal/` e `raw/adhd200/athena/extracted/`, sem uso.
+
+| Base | Fonte | Situação |
+|---|---|---|
+| ABIDE I | C-PAC `filt_noglobal` (ABIDE Preprocessed, S3 aberto): filtro 0,01–0,1 Hz, CompCor, movimento, sem sinal global | **Baixado** em `raw/abide/rois_aal_filt_noglobal/` (`src/download_connectivity.py --atlas aal`): 1035 sujeitos, `.1D` com cabeçalho `#2001 ... #9170` × 78–316 volumes. 77 sujeitos sem imagem processada; 86 reprovados no QC de algum avaliador (`qc_*` no fenótipo) |
+| ADHD-200 | Pipeline **Athena** (Neuro Bureau, NITRC, login gratuito): "AAL Time Courses Corrected Filtering" + "Test Release AAL Time Courses" | **Baixado** em `raw/adhd200/athena/ADHD200_AAL_TCs_*.tar*`, extraído em `raw/adhd200/athena/extracted_aal/<sítio>/<id>/`. 965 sujeitos, 1395 sessões. Usar `sfnwmrda*_aal_TCs.1D` (filtrado); `snwmrda*` é sem filtro. Colunas `Mean_2001 ... Mean_9170` após `File` e `Sub-brick`. QC em `raw/adhd200/adhd200_preprocessed_phenotypics.tsv` (`QC_Athena`: 897 passaram, 68 reprovaram) |
+| ABIDE II | Só há saídas DCAN (atlas Gordon/Power/HCP, CIFTI) e fMRIPrep/denoise (volumes completos) | Sem séries AAL prontas. Fica fora da conectividade |
+
+Cobertura na coorte pareada (`processed/cohort_matched.csv`):
+- ABIDE I: 159/167 TEA e 135/140 controles com AAL.
+- ADHD-200: 279/284 TDAH e 282/284 controles com AAL; passando no `QC_Athena`: 253 TDAH e 269 controles.
+- ABIDE II (117 TEA, 144 controles) sem conectividade. Para os modelos com imagem será preciso refazer o pareamento
+  só com quem tem AAL.
+
+Pipelines verificados e descartados (25/11/2026):
+- C-PAC do ADHD-200 no S3 (`ADHD200/Outputs/cpac`): só 162 sujeitos.
+- `denoise` (as três bases): volumes completos (~100 MB/sessão) em espaço nativo; exigiria registro ao MNI.
+- fMRIPrep (as três bases): BOLD em MNI com ~550 MB/sessão; a versão em superfície fsaverage5 é leve (~15 MB),
+  mas o bucket não tem os arquivos de confounds para remover movimento.
+
+**Atenção:** C-PAC (ABIDE) e Athena (ADHD-200) são pipelines diferentes, ainda que com o mesmo atlas. Diferenças
+entre eles viram mais um confundimento de base: repetir o teste de viés entre controles com as features de
+conectividade e harmonizar por instituição (ComBat) antes de modelar. Não se sabe ao certo se o Athena removeu o
+sinal global; verificar na documentação do pipeline antes de escolher `filt_noglobal` × `filt_global` no ABIDE.
+
+### Downloads manuais do NITRC (Athena)
+Pacote **ADHD200 Preproc Athena** em `https://www.nitrc.org/frs/?group_id=383` (login gratuito; aceitar o acordo de
+coleta de e-mail). Baixados em 25/11/2026 e guardados em `raw/adhd200/athena/`:
+`ADHD200_AAL_TCs_filtfix.tar.gz`, `ADHD200_AAL_TCs_TestRelease.tar`, `ADHD200_CC200_TCs_filtfix.tar.gz`,
+`ADHD200_CC200_TCs_TestRelease.tar`. Também `raw/adhd200/adhd200_preprocessed_phenotypics.tsv` (973 sujeitos).
+A pasta `data/NITRC-multi-file-downloads/` (e o `.zip`) tem um download errado (`15min_dsi_project`) e pode ser apagada.
+
 ## Tabelas derivadas (`src/harmonize.py` e notebook 01)
 | Arquivo | Conteúdo |
 |---|---|
