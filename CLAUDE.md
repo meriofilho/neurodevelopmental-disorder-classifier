@@ -34,6 +34,7 @@ imbalanced-learn, nilearn, shap, umap-learn. Novas dependências: adicionar em `
    **Notebook 03:** baseline só com fenótipo: árvore 0,40; regressão logística, LDA e RF 0,38; XGBoost 0,37 (acaso 0,33). Falta sinal; próximos passos: fenótipo clínico do HBN e neuroimagem.
    **Notebook 04 (conectividade AAL):** controles ABIDE × ADHD-200 separáveis com 0,999 mesmo nas instituições compartilhadas e com normalização por sujeito (C-PAC × Athena). Não comparar TEA × TDAH entre bases com conectividade. Válido: TEA × Controle dentro do ABIDE I (logística 0,64). TDAH × Controle dentro do ADHD-200 fica abaixo do acaso por efeito de sítio.
    **Notebook 05:** padronizar features por instituição (`standardize_by_group`) corrige o abaixo-do-acaso, mas TDAH × Controle fica em 0,50–0,53; TEA × Controle 0,65 (logística). Para tarefas só do ADHD-200, usar `load_adhd200()` (recupera os controles que `harmonize()` atribui ao ABIDE).
+   **Notebook 06 (fenótipo + conectividade, `src/fusion.py`):** TEA × Controle 0,66 com fusão tardia + logística (melhor do projeto); TDAH × Controle 0,57 só com fenótipo (QI), conectividade piora.
 2. **Vazamento por escalas.** ADOS/ADI-R só existem para ABIDE e Conners/ADHD-RS só para ADHD-200 — a mera presença
    da escala revela o rótulo. Usar apenas features comuns às duas bases (idade, sexo, QI, lateralidade, imagem).
 3. **Sítio como feature.** Útil para harmonização, mas não deve entrar como preditor no modelo final.
