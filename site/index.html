@@ -67,13 +67,13 @@
     </div>
 
     <div class="kpis">
-      <div class="kpi k1"><div class="v num">0,66</div><div class="t">TEA × Controle</div>
-        <div class="d">Melhor resultado: fenótipo + conectividade com regressão logística (AUC 0,71).</div></div>
+      <div class="kpi k1"><div class="v num">0,67</div><div class="t">TEA × Controle</div>
+        <div class="d">Melhor resultado: fenótipo + conectividade com regressão logística (AUC 0,71), com sexo e idade equilibrados.</div></div>
       <div class="kpi k2"><div class="v num">0,999</div><div class="t">A base é identificável</div>
         <div class="d">A conectividade revela o pipeline de origem entre controles. TEA × TDAH não é comparável entre bases.</div></div>
-      <div class="kpi k3"><div class="v num">0,57</div><div class="t">TDAH × Controle</div>
-        <div class="d">Só o QI tem sinal; a conectividade fica no acaso (~0,50).</div></div>
-      <div class="kpi k4"><div class="v num">+0,09</div><div class="t">Comitês &gt; árvore</div>
+      <div class="kpi k3"><div class="v num">0,60</div><div class="t">TDAH × Controle</div>
+        <div class="d">Só o QI tem sinal (AUC 0,64); a conectividade fica no acaso (~0,50).</div></div>
+      <div class="kpi k4"><div class="v num">+0,07</div><div class="t">Comitês &gt; árvore</div>
         <div class="d">Ganho máximo de RF/XGBoost sobre a árvore em TEA; a regressão logística empata ou vence.</div></div>
     </div>
   </div>
@@ -86,6 +86,7 @@
       <span class="sec-kicker">01 · Principais resultados</span>
       <h2>O que encontramos</h2>
       <p>Acurácia balanceada nas duas tarefas válidas (dentro de cada base), por conjunto de features e modelo.
+        Casos e controles com sexo e idade equilibrados por pesos (no treino e no teste) e idade fora das features (notebook 08).
         Alterne entre as tarefas no seletor; passe o mouse ou use o teclado sobre as barras para ver a AUC.</p>
     </div>
 
@@ -108,9 +109,9 @@
 
     <div class="takeaways">
       <div class="take"><div class="ic c1">1</div><h4>TEA é distinguível de controles</h4>
-        <p>0,64–0,66 entre instituições, em linha com a literatura do ABIDE. Fenótipo e conectividade se complementam.</p></div>
+        <p>0,64–0,67 entre instituições, em linha com a literatura do ABIDE. Fenótipo e conectividade se complementam.</p></div>
       <div class="take"><div class="ic c2">2</div><h4>TDAH não, pela conectividade</h4>
-        <p>No ADHD-200, a conectividade fica no acaso; só o QI ajuda (0,57). Somar conectividade piora.</p></div>
+        <p>No ADHD-200, a conectividade fica no acaso; só o QI ajuda (0,60). Somar conectividade piora.</p></div>
       <div class="take"><div class="ic c3">3</div><h4>A base de dados é o maior risco</h4>
         <p>TEA e TDAH vêm de bases e pipelines diferentes, perfeitamente identificáveis. Por isso TEA × TDAH exige uma base única (HBN).</p></div>
     </div>
@@ -316,7 +317,7 @@
     <div class="sec-head">
       <span class="sec-kicker">08 · Análises</span>
       <h2>Fenótipo + conectividade</h2>
-      <p>Idade e QIs (sexo excluído: amostras não pareadas) combinados com a conectividade padronizada.
+      <p>QIs combinados com a conectividade padronizada, com pesos de sexo × idade no treino e no teste; idade e sexo fora das features.
         <b>Fusão precoce</b>: tudo num único modelo. <b>Fusão tardia</b>: um modelo por fonte e média das probabilidades.
         O gráfico interativo está em <a href="#resultados">Principais resultados</a>.</p>
     </div>
@@ -326,10 +327,10 @@
         <div class="table-wrap"><table>
           <thead><tr><th>Modelo</th><th class="n">Fenótipo</th><th class="n">Conect.</th><th class="n">Precoce</th><th class="n">Tardia</th></tr></thead>
           <tbody>
-            <tr class="best"><td>Regressão logística</td><td class="n">0,59</td><td class="n">0,64</td><td class="n">0,65</td><td class="n"><b>0,66</b></td></tr>
-            <tr><td>XGBoost</td><td class="n">0,56</td><td class="n">0,64</td><td class="n">0,65</td><td class="n">0,64</td></tr>
-            <tr><td>Random Forest</td><td class="n">0,58</td><td class="n">0,61</td><td class="n">0,62</td><td class="n">0,61</td></tr>
-            <tr><td>Árvore de decisão</td><td class="n">0,57</td><td class="n">0,55</td><td class="n">0,59</td><td class="n">0,59</td></tr>
+            <tr class="best"><td>Regressão logística</td><td class="n">0,60</td><td class="n">0,64</td><td class="n">0,64</td><td class="n"><b>0,67</b></td></tr>
+            <tr><td>XGBoost</td><td class="n">0,58</td><td class="n">0,64</td><td class="n">0,64</td><td class="n">0,65</td></tr>
+            <tr><td>Random Forest</td><td class="n">0,60</td><td class="n">0,62</td><td class="n">0,62</td><td class="n">0,63</td></tr>
+            <tr><td>Árvore de decisão</td><td class="n">0,59</td><td class="n">0,56</td><td class="n">0,58</td><td class="n">0,60</td></tr>
           </tbody></table></div>
       </div>
       <div>
@@ -337,13 +338,17 @@
         <div class="table-wrap"><table>
           <thead><tr><th>Modelo</th><th class="n">Fenótipo</th><th class="n">Conect.</th><th class="n">Precoce</th><th class="n">Tardia</th></tr></thead>
           <tbody>
-            <tr class="best"><td>Regressão logística</td><td class="n"><b>0,57</b></td><td class="n">0,50</td><td class="n">0,50</td><td class="n">0,52</td></tr>
-            <tr><td>Árvore de decisão</td><td class="n">0,54</td><td class="n">0,50</td><td class="n">0,53</td><td class="n">0,51</td></tr>
-            <tr><td>Random Forest</td><td class="n">0,52</td><td class="n">0,49</td><td class="n">0,51</td><td class="n">0,52</td></tr>
-            <tr><td>XGBoost</td><td class="n">0,52</td><td class="n">0,48</td><td class="n">0,48</td><td class="n">0,51</td></tr>
+            <tr class="best"><td>Regressão logística</td><td class="n"><b>0,60</b></td><td class="n">0,49</td><td class="n">0,49</td><td class="n">0,51</td></tr>
+            <tr><td>Random Forest</td><td class="n">0,57</td><td class="n">0,49</td><td class="n">0,50</td><td class="n">0,57</td></tr>
+            <tr><td>Árvore de decisão</td><td class="n">0,55</td><td class="n">0,50</td><td class="n">0,53</td><td class="n">0,53</td></tr>
+            <tr><td>XGBoost</td><td class="n">0,55</td><td class="n">0,45</td><td class="n">0,49</td><td class="n">0,53</td></tr>
           </tbody></table></div>
       </div>
     </div>
+    <div class="callout ok"><span class="bar"></span><div><strong>Os resultados resistem ao controle de sexo e idade</strong>
+      <p>No notebook 06 (sem pesos, idade como feature) os números eram TEA 0,66 e TDAH 0,57. Com pesos e sem idade, nenhum caiu:
+        TEA 0,67 e TDAH 0,60. No ADHD-200 o desequilíbrio de sexo era grande (diferença padronizada 0,58, mais meninos no TDAH);
+        retirar o atalho deixou o QI mais limpo e o resultado subiu.</p></div></div>
     <div class="callout info"><span class="bar"></span><div><strong>Cuidado com o QI no ADHD-200</strong>
       <p>QI verbal e de execução faltam mais nos controles (36%) que no TDAH (23%). A imputação iterativa reduz o risco, mas parte do sinal pode vir do padrão de ausência.</p></div></div>
   </div>
@@ -360,7 +365,7 @@
       <div class="card"><h4>1 · O desenho com bases separadas não responde TEA × TDAH</h4>
         <p>O fenótipo carrega viés de recrutamento (corrigível por pareamento ou pesos de sexo × idade); a conectividade carrega o pipeline (não corrigível com estes dados).</p></div>
       <div class="card"><h4>2 · TEA × Controle tem sinal reproduzível</h4>
-        <p>0,64–0,66 entre instituições, melhor com fenótipo + conectividade.</p></div>
+        <p>0,64–0,67 entre instituições, melhor com fenótipo + conectividade, mesmo com sexo e idade equilibrados.</p></div>
       <div class="card"><h4>3 · TDAH × Controle quase não tem sinal</h4>
         <p>A conectividade fica no acaso entre instituições; o QI é o que mais ajuda.</p></div>
       <div class="card"><h4>4 · Hipótese do canvas: confirmada em parte</h4>
@@ -411,7 +416,7 @@
         <tr><td>Séries do ADHD-200 (Athena)</td><td>download no NITRC, ver <code>data/README.md</code></td></tr>
         <tr><td>Matrizes de conectividade</td><td><code>src/connectivity.py</code></td></tr>
         <tr><td>Modelos e avaliação</td><td><code>src/evaluation.py</code>, <code>src/fusion.py</code></td></tr>
-        <tr><td>Análises</td><td>notebooks <code>01</code> a <code>07</code></td></tr>
+        <tr><td>Análises</td><td>notebooks <code>01</code> a <code>08</code></td></tr>
       </tbody></table></div>
     <p style="margin-top:20px;color:var(--muted);font-size:14px">Agradecimentos: ABIDE, ADHD-200 Consortium, The Neuro Bureau (pipeline Athena),
       Preprocessed Connectomes Project e International Neuroimaging Data-sharing Initiative (INDI).</p>

@@ -14,11 +14,28 @@ from sklearn.base import clone
 from sklearn.compose import ColumnTransformer
 from sklearn.ensemble import RandomForestClassifier, VotingClassifier
 from sklearn.linear_model import LogisticRegression, LogisticRegressionCV
-from sklearn.pipeline import make_pipeline
+from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
 from evaluation import RANDOM_STATE, BalancedXGB, _imputer
+
+
+class PipelineSW(Pipeline):
+    """Pipeline que aceita `sample_weight` em fit e o repassa ao último passo.
+
+    Necessário para a fusão tardia: o VotingClassifier chama fit(X, y, sample_weight=w) em cada pipeline.
+    """
+
+    def fit(self, X, y=None, sample_weight=None, **params):
+        if sample_weight is not None:
+            params[f"{self.steps[-1][0]}__sample_weight"] = sample_weight
+        return super().fit(X, y, **params)
+
+
+def make_pipeline(*steps):
+    return PipelineSW([(f"{type(s).__name__.lower()}_{i}" if not isinstance(s, str) else f"passo_{i}", s)
+                       for i, s in enumerate(steps)])
 
 
 def _base_models(seed: int) -> dict:

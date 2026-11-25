@@ -11,38 +11,39 @@
     { k: "xgb", nome: "XGBoost", cor: "--s-xgb" },
   ];
 
-  /* ---------------- dados (notebooks 01–06) ---------------- */
+  /* ---------------- dados (notebooks 01–08) ---------------- */
+  // Resultado principal = notebook 08: pesos de sexo × idade (treino e teste), idade fora das features.
   const PRINCIPAL = {
     tea: {
-      titulo: "TEA × Controle · ABIDE I · 732 sujeitos, 17 instituições",
+      titulo: "TEA × Controle · ABIDE I · 732 sujeitos, 17 instituições · pesos de sexo × idade",
       cats: ["Fenótipo", "Conectividade", "Fusão precoce", "Fusão tardia"],
       acc: {
-        "Fenótipo": { log: .594, tree: .573, rf: .580, xgb: .561 },
-        "Conectividade": { log: .641, tree: .552, rf: .610, xgb: .639 },
-        "Fusão precoce": { log: .646, tree: .585, rf: .623, xgb: .648 },
-        "Fusão tardia": { log: .662, tree: .585, rf: .610, xgb: .644 },
+        "Fenótipo": { log: .601, tree: .587, rf: .596, xgb: .583 },
+        "Conectividade": { log: .643, tree: .564, rf: .623, xgb: .638 },
+        "Fusão precoce": { log: .638, tree: .582, rf: .619, xgb: .641 },
+        "Fusão tardia": { log: .666, tree: .598, rf: .626, xgb: .653 },
       },
       auc: {
-        "Fenótipo": { log: .62, tree: .59, rf: .61, xgb: .59 },
-        "Conectividade": { log: .69, tree: .57, rf: .67, xgb: .69 },
-        "Fusão precoce": { log: .69, tree: .60, rf: .69, xgb: .71 },
-        "Fusão tardia": { log: .71, tree: .61, rf: .65, xgb: .69 },
+        "Fenótipo": { log: .63, tree: .61, rf: .62, xgb: .62 },
+        "Conectividade": { log: .69, tree: .57, rf: .68, xgb: .69 },
+        "Fusão precoce": { log: .69, tree: .61, rf: .68, xgb: .71 },
+        "Fusão tardia": { log: .71, tree: .62, rf: .67, xgb: .70 },
       },
     },
     tdah: {
-      titulo: "TDAH × Controle · ADHD-200 · 853 sujeitos, 7 instituições",
+      titulo: "TDAH × Controle · ADHD-200 · 852 sujeitos, 7 instituições · pesos de sexo × idade",
       cats: ["Fenótipo", "Conectividade", "Fusão precoce", "Fusão tardia"],
       acc: {
-        "Fenótipo": { log: .574, tree: .544, rf: .524, xgb: .523 },
-        "Conectividade": { log: .502, tree: .499, rf: .493, xgb: .475 },
-        "Fusão precoce": { log: .502, tree: .531, rf: .507, xgb: .484 },
-        "Fusão tardia": { log: .520, tree: .506, rf: .521, xgb: .507 },
+        "Fenótipo": { log: .602, tree: .552, rf: .565, xgb: .549 },
+        "Conectividade": { log: .489, tree: .504, rf: .490, xgb: .449 },
+        "Fusão precoce": { log: .493, tree: .528, rf: .495, xgb: .492 },
+        "Fusão tardia": { log: .514, tree: .533, rf: .566, xgb: .525 },
       },
       auc: {
-        "Fenótipo": { log: .59, tree: .52, rf: .54, xgb: .51 },
-        "Conectividade": { log: .49, tree: .51, rf: .49, xgb: .45 },
-        "Fusão precoce": { log: .49, tree: .53, rf: .51, xgb: .48 },
-        "Fusão tardia": { log: .53, tree: .51, rf: .53, xgb: .49 },
+        "Fenótipo": { log: .64, tree: .57, rf: .58, xgb: .55 },
+        "Conectividade": { log: .47, tree: .50, rf: .46, xgb: .45 },
+        "Fusão precoce": { log: .48, tree: .53, rf: .48, xgb: .48 },
+        "Fusão tardia": { log: .52, tree: .55, rf: .57, xgb: .51 },
       },
     },
   };
