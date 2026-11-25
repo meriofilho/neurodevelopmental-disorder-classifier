@@ -35,7 +35,7 @@ reports/       slides e texto da apresentação
 |---|---|---|
 | [01](notebooks/01_exploracao_fenotipo_vies.ipynb) | Junta ABIDE I, ABIDE II e ADHD-200; testa viés de base | 2945 sujeitos únicos; controles das duas famílias de bases são distinguíveis (0,55; acaso 0,50), por sexo e idade |
 | [02](notebooks/02_pareamento_sexo_idade.ipynb) | Pareia os grupos por sexo e idade | 1136 sujeitos; viés de base some (0,42) |
-| [03](notebooks/03_baseline_fenotipo.ipynb) | Árvore × Random Forest × XGBoost só com fenótipo | Árvore 0,40, RF 0,38, XGBoost 0,37 (acaso 0,33): pouco sinal |
+| [03](notebooks/03_baseline_fenotipo.ipynb) | Regressão logística, LDA, árvore, Random Forest e XGBoost só com fenótipo | Árvore 0,40; logística, LDA e RF 0,38; XGBoost 0,37 (acaso 0,33): pouco sinal, nenhum modelo supera a árvore |
 
 Para reproduzir: `src/download_phenotypes.py` → `src/harmonize.py` → notebooks em ordem.
 

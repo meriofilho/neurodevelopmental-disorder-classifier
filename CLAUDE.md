@@ -4,7 +4,7 @@ Contexto para trabalhar neste projeto. Visão geral em [README.md](README.md); c
 
 ## Projeto
 Classificação multiclasse (TEA, TDAH, Controle; TEAF futuro) com dados públicos ABIDE I, ABIDE II e ADHD-200 (HBN em pedido de acesso).
-Baseline = árvore de decisão; modelo principal = RF/XGBoost. Trabalho acadêmico (BIF0051, UFRN), apresentação 01–04/12/2026.
+Baseline = árvore de decisão; modelo principal = RF/XGBoost; referências lineares = regressão logística e LDA. Trabalho acadêmico (BIF0051, UFRN), apresentação 01–04/12/2026.
 Idioma do projeto: português (código e nomes de variáveis podem ser em inglês).
 
 ## Ambiente
@@ -31,7 +31,7 @@ imbalanced-learn, nilearn, shap, umap-learn. Novas dependências: adicionar em `
    *controles ABIDE × controles ADHD-200* (se sim, há viés de base); harmonizar (ex.: ComBat) e usar o mesmo pipeline de imagem.
    **Notebook 01 (com ABIDE II):** acurácia balanceada 0,55 entre controles 7–21 anos só com fenótipo (acaso 0,50), puxada por sexo e idade.
    **Notebook 02:** pareamento sexo × idade (`src/matching.py`) leva a 0,42 ± 0,03. Modelar sobre `data/processed/cohort_matched.csv` (1136 sujeitos).
-   **Notebook 03:** baseline só com fenótipo: árvore 0,40, RF 0,38, XGBoost 0,37 (acaso 0,33). Falta sinal; próximos passos: fenótipo clínico do HBN e neuroimagem.
+   **Notebook 03:** baseline só com fenótipo: árvore 0,40; regressão logística, LDA e RF 0,38; XGBoost 0,37 (acaso 0,33). Falta sinal; próximos passos: fenótipo clínico do HBN e neuroimagem.
 2. **Vazamento por escalas.** ADOS/ADI-R só existem para ABIDE e Conners/ADHD-RS só para ADHD-200 — a mera presença
    da escala revela o rótulo. Usar apenas features comuns às duas bases (idade, sexo, QI, lateralidade, imagem).
 3. **Sítio como feature.** Útil para harmonização, mas não deve entrar como preditor no modelo final.

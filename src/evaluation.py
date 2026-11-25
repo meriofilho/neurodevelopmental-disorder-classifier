@@ -1,12 +1,15 @@
 """Modelos e avaliação multiclasse (Controle, TDAH, TEA) com validação agrupada por sítio."""
 import numpy as np
 import pandas as pd
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.experimental import enable_iterative_imputer  # noqa: F401
 from sklearn.impute import IterativeImputer
+from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import balanced_accuracy_score, confusion_matrix, recall_score, roc_auc_score
 from sklearn.model_selection import GroupKFold, cross_val_predict
 from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.utils.class_weight import compute_sample_weight
 from xgboost import XGBClassifier
@@ -48,7 +51,17 @@ def _imputer(seed):
 
 
 def make_models(seed: int = RANDOM_STATE, tree_depth: int = 3) -> dict:
+    """Modelos comparados. Lineares (regressão logística, LDA) padronizam as features; árvores não precisam."""
     return {
+        "Regressão logística": make_pipeline(
+            _imputer(seed), StandardScaler(),
+            LogisticRegression(C=1.0, class_weight="balanced", max_iter=2000, random_state=seed),
+        ),
+        "LDA": make_pipeline(
+            _imputer(seed), StandardScaler(),
+            # priors iguais = equivalente a balancear as classes
+            LinearDiscriminantAnalysis(priors=[1 / 3, 1 / 3, 1 / 3]),
+        ),
         "Árvore de decisão": make_pipeline(
             _imputer(seed),
             DecisionTreeClassifier(max_depth=tree_depth, min_samples_leaf=10, class_weight="balanced", random_state=seed),
